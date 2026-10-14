@@ -115,6 +115,8 @@ class ResourcesTest(unittest.TestCase):
         self.assertEqual(defaults['init_states'], str(SOURCE/'libero/libero/init_files'))
     def test_source_only_install_chooses_cache_without_import_download(self):
         package = self.root/'source-only/libero/libero'; package.mkdir(parents=True)
+        # A regular outer package prevents an editable install from overriding this fixture.
+        shutil.copy2(SOURCE/'libero/__init__.py', package.parent/'__init__.py')
         for name in ['__init__.py','resources.py','upstream_resources.json']:
             shutil.copy2(SOURCE/'libero/libero'/name, package/name)
         # Partial assets/XML must not trick completeness into accepting the wheel.

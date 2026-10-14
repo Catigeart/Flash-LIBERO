@@ -7,3 +7,6 @@ prune build
 prune dist
 recursive-include licenses *.txt
 recursive-include tests *.py *.md
+include CONTRIBUTING.md AGENTS.md .gitignore .gitattributes requirements.txt
+recursive-include tools *.py *.json *.txt
+recursive-include .github *.yml

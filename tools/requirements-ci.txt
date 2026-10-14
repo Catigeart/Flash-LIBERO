@@ -1,0 +1,6 @@
+setuptools>=64,<81
+wheel>=0.45,<1
+numpy>=1.24,<2
+PyYAML>=6,<7
+gym==0.25.2
+cloudpickle>=2.1,<4

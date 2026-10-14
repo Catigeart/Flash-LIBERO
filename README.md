@@ -25,6 +25,7 @@
 - [Evaluation](#evaluation)
 - [Configuration](#configuration)
 - [Tests](#tests)
+- [Contributing](#contributing)
 - [Acknowledgments](#acknowledgments)
 - [License](#license)
 
@@ -238,6 +239,10 @@ For CUDA source layout and low-level entry points, see [GPU source documentation
 ## Tests
 
 A small regression suite covers installation layout, resource and toolchain paths, source dependencies, vector protocols, and observation/graphics ownership. See [tests/README.md](tests/README.md) for commands and scope.
+
+## Contributing
+
+Development and releases use this Git repository. See [CONTRIBUTING.md](CONTRIBUTING.md) for editable installation, focused branches, CPU checks, and tagged releases. The release tool builds checked wheel/source artifacts directly from the current working tree.
 
 ## Acknowledgments
 
