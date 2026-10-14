@@ -1,0 +1,72 @@
+# Algorithm Configuration and Scope
+
+Device mathematics uses handwritten CUDA. Standard matrix multiplication, factorization, and solves use cuBLASDx/cuSOLVERDx. FMA is enabled, with precise division and square root and non-FTZ behavior retained.
+
+## Configuration API
+
+`host.factory.prepare_cuda_physics` accepts a frozen configuration object or a nested dictionary with the same structure:
+
+```python
+from libero.gpu.host.factory import prepare_cuda_physics
+from libero.gpu.host.runtime.core.algorithm_config import AlgorithmOptions
+
+policy = AlgorithmOptions()
+bundle = prepare_cuda_physics(*physics_inputs, algorithm_options=policy)
+```
+
+`AlgorithmOptions.baseline()` selects the configurable Newton, collision, and Post comparison paths; it does not restore an earlier source snapshot. `AlgorithmOptions.experimental()` requests exact Newton islands and collision temporal caching, subject to their respective admission checks. A changed algorithm or owner requires cold reassembly. Unknown fields, invalid types, and simultaneous centralized/legacy Newton configuration are rejected.
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `newton.cone_hessian_strategy` | `auto` | Rank updates for few cones; batched U/Gram accumulation and complete POTRF for larger sets. |
+| `newton.cone_batch_threshold` | `None`, resolved to NV | Select using effective cone rank; explicitly configurable. |
+| `newton.rank_rebuild_threshold` | `None`, resolved to max(8,NV//2) | Rebuild the base Hessian after larger active-set changes; 0 disables this choice. |
+| `newton.newton_islands` | `off` | `exact` partitions the exact nonzero graph of the current lower H; no cross-iteration physical-graph cache. |
+| `collision.temporal` | `False` | Request conservative fat-AABB/candidate caching. |
+| `collision.absolute_padding` / `relative_padding` | 0.005 / 0.01 | Spatial padding, subject to validity and capacity admission. |
+| `collision.max_age` / `max_cache_bytes` | 32 / 8 MiB | Cache age and private memory limits. |
+| `post.contact_index_mode` | `auto` | Scan, radix, or automatic selection. |
+| `post.radix_min_contacts` | 256 | Automatic radix also requires nbody >= 32. |
+| `post.contact_topology_cache` | `True` | Reuse CSR only when ncon and every event body key match exactly. |
+
+Thresholds remain configurable. Historical measurements include synthetic independent-function inputs and do not establish universal optimal thresholds.
+
+## Newton
+
+Batched cones retain the local pivot floor: U = Lc^T J and the base matrix is Lbase Lbase^T from the input factor. The base H remains available for later rank updates. Final POTRF runs after all effective cones are processed. Public upper-triangle and blocked outputs retain their separate contracts.
+
+Exact islands rebuild the graph from the current represented matrix, retaining every nonzero coupling without epsilon pruning. Global cost, shared alpha, line search, and stopping rules are preserved. Islands remain off by default because small-capacity timings did not improve. Full-NV workspace remains allocated.
+
+`host.runtime.newton.blocked_factor.BlockedFactorPlan` is an independently callable dense factor/direction plan: tile16, private global factor/vector storage, one CTA per world, and runtime n/ld. POTRF, right-side TRSM, trailing GEMM, and blocked vector solving run in one kernel. Its independent capacity128 scope does not establish full persistent Newton NV128 support; the complete solver still requires its Hessian, arena, and lifecycle capacity admission.
+
+The Newton default uses 128 threads. This does not change the general collision/constraint configuration or force a vector-copy choice. NV21/43 use scalar I/O; NV57 retains its selected mathematics and packet I/O. Small-capacity complete Cholesky remains on cuSOLVERDx.
+
+## Collision and Constraints
+
+Temporal caching requires nonnegative radii/margins, a complete static shadow, a valid position epoch, worst-case query/stage/tree-tape capacity, and a private memory budget. Matrix-norm envelopes cover mildly nonorthogonal transforms and MPR RR^T margins. The explicit-pair tail is retained each step. Overrides, model changes, and invalid input fall back to the original path. Only successful cold admission can omit the repeated PCA-bounds producer; the `temporal_front` manifest reports the actual admission reason.
+
+Exact BoxBox deduplication uses numerical xyz equality and retains the last original ordinal. Signed zeros share a group; NaN/inf are rejected first. Active-prefix computation is separate from fixed-capacity tail writes. Sorting and first-error publication rules are preserved.
+
+MPR portal reuse is on. `LIBERO_NATIVE_SUPPORT_REUSE` is off by default; support reuse is valid only within the same query, not across poses. Historical actual MPR samples had no support-cache hits.
+
+S caches ordered ancestor support for body pairs. Budget overruns and structural mismatches use the original merge. Common-column algebraic cancellation is limited by finite-input guards; larger inputs preserve overflow/NaN rejection. Pair caching is on, while common-zero skipping is off. `LIBERO_CUDA_S_COMMON_ZERO=1` remains an explicit experimental choice.
+
+Mass forests run qualifying contiguous independent roots in parallel. Within-root arithmetic order, pivot floors, warnings, and failure cleanup are preserved. Single-root and interleaved layouts use the original path.
+
+## Post and Memory Helpers
+
+Post caching reuses body incidence only. Forces, efc addresses, frames, and positions always come from current input. The same producer owns private CSR workspace. External CSR overrides must restore matching key/metadata or call `cuda_post_contact_cache_invalidate`. Newton finalization uses the same Post algorithm and owner.
+
+Copy and finite helpers retain scalar defaults. Selected 342-double copies require 64 threads and both actual addresses aligned to 16 bytes. Other tested sizes and unaligned views retain scalar paths. Integer copies are unchanged.
+
+The F position chain binds model counts during cold construction. Its 14 finite checks use `finite_lane_known<Count>`; only compile-time Count342 selects the vector route. Unconfigured dynamics/Euler callers remain scalar. Existing safe helpers handle unaligned views. No wider threshold is inferred from the limited samples.
+
+## Scope and Default Policy
+
+- Forest, Post auto radix/exact topology caching, and adaptive Newton Hessian selection retain their production conditions and fallbacks.
+- C portal reuse remains on; support caching and temporal caching remain off by default.
+- Standalone tile16 capacity128 remains independent of the complete solver.
+- Negative or mixed performance domains retain the original implementation.
+- Cold source authentication preserves source/build/policy/owner binding, explicit invalidation, and error behavior.
+
+Historical independent-function checks used FP64 error accumulation, backward residuals, and sensitivity. Indices, stable order, capacity, copy bit patterns, and protected writes retain exact contracts. Cold compilation/resource checks do not substitute for numerical execution, and local results do not establish complete application correctness or whole-step speedups. No new GPU qualification is performed by this documentation update.

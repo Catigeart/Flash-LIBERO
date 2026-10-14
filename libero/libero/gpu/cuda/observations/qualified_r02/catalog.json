@@ -1,0 +1,646 @@
+{
+  "catalog": {
+    "O05": {
+      "roles": {
+        "original": {
+          "description": {
+            "abi": {
+              "capture": "int(void*,int,int)",
+              "create": "int(int,void**)",
+              "destroy": "int(void*)",
+              "measure": "int(void*,float*)",
+              "read": "int(void*,double*,int*,int*,int*)",
+              "step": "int(void*,int)",
+              "upload": "int(void*,float*,int*)"
+            },
+            "binary_name": "probe.so",
+            "commands": [
+              [
+                "/usr/local/cuda/bin/nvcc",
+                "-Xcompiler",
+                "-fPIC",
+                "-O3",
+                "-std=c++17",
+                "--fmad=true",
+                "--prec-div=true",
+                "--prec-sqrt=true",
+                "--ftz=false",
+                "-arch=sm_120",
+                "-DCF_MEMO=0",
+                "-shared",
+                "${MODULE_DIR}/probe.cu",
+                "-o",
+                "${MODULE_DIR}/probe.so"
+              ]
+            ],
+            "configuration": {
+              "FMA": true,
+              "FTZ": false,
+              "W1_W2": "runtime grid only; each case fresh Context owns all allocations/events/graph",
+              "arch": 120,
+              "memo_function_sha256": "a183e72a240ac3f2fe71fafee2d0b01c98e4e3c283b151da6f82afc9a3a2f845",
+              "original_function_sha256": "be883271a44fed2019e92abf6cd87dee0204305e36b4b8eab40ddeb6da8ef6e1",
+              "precise_div_sqrt": true
+            },
+            "defines": {
+              "CF_MEMO": 0
+            },
+            "files": {
+              "probe.cu": {
+                "bytes": 5847,
+                "sha256": "824cb601c3ca503455ad25139a391811784ef961c2f33d8397ac93dc9e3f7374"
+              }
+            }
+          },
+          "assets": {
+            "probe.cu": "cuda/observations/qualified_r02/assets/824cb601c3ca503455ad25139a391811784ef961c2f33d8397ac93dc9e3f7374.cu"
+          },
+          "tested_spec_id": "7d106f160ea6617e3efb8473d66ad87da66c54d24c224a896848b2fd56795ebb"
+        },
+        "memo": {
+          "description": {
+            "abi": {
+              "capture": "int(void*,int,int)",
+              "create": "int(int,void**)",
+              "destroy": "int(void*)",
+              "measure": "int(void*,float*)",
+              "read": "int(void*,double*,int*,int*,int*)",
+              "step": "int(void*,int)",
+              "upload": "int(void*,float*,int*)"
+            },
+            "binary_name": "probe.so",
+            "commands": [
+              [
+                "/usr/local/cuda/bin/nvcc",
+                "-Xcompiler",
+                "-fPIC",
+                "-O3",
+                "-std=c++17",
+                "--fmad=true",
+                "--prec-div=true",
+                "--prec-sqrt=true",
+                "--ftz=false",
+                "-arch=sm_120",
+                "-DCF_MEMO=1",
+                "-shared",
+                "${MODULE_DIR}/probe.cu",
+                "-o",
+                "${MODULE_DIR}/probe.so"
+              ]
+            ],
+            "configuration": {
+              "FMA": true,
+              "FTZ": false,
+              "W1_W2": "runtime grid only; each case fresh Context owns all allocations/events/graph",
+              "arch": 120,
+              "memo_function_sha256": "a183e72a240ac3f2fe71fafee2d0b01c98e4e3c283b151da6f82afc9a3a2f845",
+              "original_function_sha256": "be883271a44fed2019e92abf6cd87dee0204305e36b4b8eab40ddeb6da8ef6e1",
+              "precise_div_sqrt": true
+            },
+            "defines": {
+              "CF_MEMO": 1
+            },
+            "files": {
+              "probe.cu": {
+                "bytes": 5847,
+                "sha256": "824cb601c3ca503455ad25139a391811784ef961c2f33d8397ac93dc9e3f7374"
+              }
+            }
+          },
+          "assets": {
+            "probe.cu": "cuda/observations/qualified_r02/assets/824cb601c3ca503455ad25139a391811784ef961c2f33d8397ac93dc9e3f7374.cu"
+          },
+          "tested_spec_id": "77d06374fdc390652021f29e4a1f3c31f3d8b9db0d4e387043bf0925ac515bcc"
+        }
+      },
+      "evidence": "qa/O05-real-retained-r02/RESULT.json",
+      "build_evidence": "build/O05-real-retained-r02/bundle/modules_manifest.json"
+    },
+    "O07": {
+      "roles": {
+        "existing": {
+          "description": {
+            "abi": {
+              "capture": "int(void*,int,int,double)",
+              "create": "int(void**,int*,double*)",
+              "destroy": "int(void*)",
+              "measure": "int(void*,float*)",
+              "mutate": "int(void*,int*)",
+              "read": "int(void*,double*,int*,uint64*)",
+              "step": "int(void*,int,double)",
+              "upload": "int(void*,double*,double*,int*)"
+            },
+            "binary_name": "probe.so",
+            "commands": [
+              [
+                "/usr/local/cuda/bin/nvcc",
+                "-Xcompiler",
+                "-fPIC",
+                "-O3",
+                "-std=c++17",
+                "--fmad=true",
+                "--prec-div=true",
+                "--prec-sqrt=true",
+                "--ftz=false",
+                "-arch=sm_120",
+                "-DCF_ROUTE=1",
+                "-I",
+                "${MODULE_DIR}",
+                "-shared",
+                "${MODULE_DIR}/probe.cu",
+                "-o",
+                "${MODULE_DIR}/probe.so"
+              ]
+            ],
+            "configuration": {
+              "actual_worlds": 1,
+              "arch": 120,
+              "materialize": 0,
+              "ns": 37,
+              "numerical_change": "none; original per-sensor functions/RAW-WAR-WAW order retained by exact DAG",
+              "private_outputs_and_metadata": true,
+              "raw_stride": 354,
+              "route": "existing",
+              "width": 153
+            },
+            "defines": {
+              "CF_ROUTE": 1
+            },
+            "files": {
+              "cuda/common/vector.cuh": {
+                "bytes": 9802,
+                "sha256": "61c655690e0bb5997994668123f9a95ac9ab02f71d6835c3d4e97ef95df53a22"
+              },
+              "cuda/observations/observations.cuh": {
+                "bytes": 11797,
+                "sha256": "1dcb7b3746e4fa8ef3b769f75893768a1aa81b5a14d2f977c972b12d061a17f2"
+              },
+              "probe.cu": {
+                "bytes": 6347,
+                "sha256": "192d91669e64e07ea5757418e39f0c7924586ac098ab059679a71f0ac3b47955"
+              }
+            }
+          },
+          "assets": {
+            "cuda/common/vector.cuh": "cuda/observations/qualified_r02/assets/61c655690e0bb5997994668123f9a95ac9ab02f71d6835c3d4e97ef95df53a22.cuh",
+            "cuda/observations/observations.cuh": "cuda/observations/qualified_r02/assets/1dcb7b3746e4fa8ef3b769f75893768a1aa81b5a14d2f977c972b12d061a17f2.cuh",
+            "probe.cu": "cuda/observations/qualified_r02/assets/192d91669e64e07ea5757418e39f0c7924586ac098ab059679a71f0ac3b47955.cu"
+          },
+          "tested_spec_id": "c1ea7200196352dafca69438e85c1772f6af253e4c0ea00325e5bbb98103f29c"
+        },
+        "sensor": {
+          "description": {
+            "abi": {
+              "capture": "int(void*,int,int,double)",
+              "create": "int(void**,int*,double*)",
+              "destroy": "int(void*)",
+              "measure": "int(void*,float*)",
+              "mutate": "int(void*,int*)",
+              "read": "int(void*,double*,int*,uint64*)",
+              "step": "int(void*,int,double)",
+              "upload": "int(void*,double*,double*,int*)"
+            },
+            "binary_name": "probe.so",
+            "commands": [
+              [
+                "/usr/local/cuda/bin/nvcc",
+                "-Xcompiler",
+                "-fPIC",
+                "-O3",
+                "-std=c++17",
+                "--fmad=true",
+                "--prec-div=true",
+                "--prec-sqrt=true",
+                "--ftz=false",
+                "-arch=sm_120",
+                "-DCF_ROUTE=2",
+                "-I",
+                "${MODULE_DIR}",
+                "-shared",
+                "${MODULE_DIR}/probe.cu",
+                "-o",
+                "${MODULE_DIR}/probe.so"
+              ]
+            ],
+            "configuration": {
+              "actual_worlds": 1,
+              "arch": 120,
+              "materialize": 0,
+              "ns": 37,
+              "numerical_change": "none; original per-sensor functions/RAW-WAR-WAW order retained by exact DAG",
+              "private_outputs_and_metadata": true,
+              "raw_stride": 354,
+              "route": "sensor",
+              "width": 153
+            },
+            "defines": {
+              "CF_ROUTE": 2
+            },
+            "files": {
+              "cuda/common/vector.cuh": {
+                "bytes": 9802,
+                "sha256": "61c655690e0bb5997994668123f9a95ac9ab02f71d6835c3d4e97ef95df53a22"
+              },
+              "cuda/observations/observations.cuh": {
+                "bytes": 17373,
+                "sha256": "1d25715dac1abd4400ff512c5b9029bd83aee7e201cc78ec2d0f308b0f0c97ba"
+              },
+              "probe.cu": {
+                "bytes": 6347,
+                "sha256": "192d91669e64e07ea5757418e39f0c7924586ac098ab059679a71f0ac3b47955"
+              }
+            }
+          },
+          "assets": {
+            "cuda/common/vector.cuh": "cuda/observations/qualified_r02/assets/61c655690e0bb5997994668123f9a95ac9ab02f71d6835c3d4e97ef95df53a22.cuh",
+            "cuda/observations/observations.cuh": "cuda/observations/qualified_r02/assets/1d25715dac1abd4400ff512c5b9029bd83aee7e201cc78ec2d0f308b0f0c97ba.cuh",
+            "probe.cu": "cuda/observations/qualified_r02/assets/192d91669e64e07ea5757418e39f0c7924586ac098ab059679a71f0ac3b47955.cu"
+          },
+          "tested_spec_id": "70aa3c2225d93a01310800996986d6186d600ae6ec4661ffbaf7ef8b79edf981"
+        },
+        "flat": {
+          "description": {
+            "abi": {
+              "capture": "int(void*,int,int,double)",
+              "create": "int(void**,int*,double*)",
+              "destroy": "int(void*)",
+              "measure": "int(void*,float*)",
+              "mutate": "int(void*,int*)",
+              "read": "int(void*,double*,int*,uint64*)",
+              "step": "int(void*,int,double)",
+              "upload": "int(void*,double*,double*,int*)"
+            },
+            "binary_name": "probe.so",
+            "commands": [
+              [
+                "/usr/local/cuda/bin/nvcc",
+                "-Xcompiler",
+                "-fPIC",
+                "-O3",
+                "-std=c++17",
+                "--fmad=true",
+                "--prec-div=true",
+                "--prec-sqrt=true",
+                "--ftz=false",
+                "-arch=sm_120",
+                "-DCF_ROUTE=3",
+                "-I",
+                "${MODULE_DIR}",
+                "-shared",
+                "${MODULE_DIR}/probe.cu",
+                "-o",
+                "${MODULE_DIR}/probe.so"
+              ]
+            ],
+            "configuration": {
+              "actual_worlds": 1,
+              "arch": 120,
+              "materialize": 0,
+              "ns": 37,
+              "numerical_change": "none; original per-sensor functions/RAW-WAR-WAW order retained by exact DAG",
+              "private_outputs_and_metadata": true,
+              "raw_stride": 354,
+              "route": "flat",
+              "width": 153
+            },
+            "defines": {
+              "CF_ROUTE": 3
+            },
+            "files": {
+              "cuda/common/vector.cuh": {
+                "bytes": 9802,
+                "sha256": "61c655690e0bb5997994668123f9a95ac9ab02f71d6835c3d4e97ef95df53a22"
+              },
+              "cuda/observations/observations.cuh": {
+                "bytes": 17373,
+                "sha256": "1d25715dac1abd4400ff512c5b9029bd83aee7e201cc78ec2d0f308b0f0c97ba"
+              },
+              "probe.cu": {
+                "bytes": 6347,
+                "sha256": "192d91669e64e07ea5757418e39f0c7924586ac098ab059679a71f0ac3b47955"
+              }
+            }
+          },
+          "assets": {
+            "cuda/common/vector.cuh": "cuda/observations/qualified_r02/assets/61c655690e0bb5997994668123f9a95ac9ab02f71d6835c3d4e97ef95df53a22.cuh",
+            "cuda/observations/observations.cuh": "cuda/observations/qualified_r02/assets/1d25715dac1abd4400ff512c5b9029bd83aee7e201cc78ec2d0f308b0f0c97ba.cuh",
+            "probe.cu": "cuda/observations/qualified_r02/assets/192d91669e64e07ea5757418e39f0c7924586ac098ab059679a71f0ac3b47955.cu"
+          },
+          "tested_spec_id": "e6bc3af25446c6772d9e14b32236e4baa72a228a01a65b7d4c8201ea0f423d17"
+        }
+      },
+      "evidence": "qa/O07-real-retained-r02/RESULT.json",
+      "build_evidence": "build/O07-real-retained-r02/bundle/modules_manifest.json"
+    },
+    "O03": {
+      "roles": {
+        "exact": {
+          "description": {
+            "abi": {
+              "capture": "int(void*,int,int)",
+              "create": "int(int,int,int,int*,double*,void**)",
+              "destroy": "int(void*)",
+              "measure": "int(void*,float*)",
+              "read": "int(void*,double*,int*,int*,int64*,int*)",
+              "step": "int(void*,int,int,int)",
+              "upload": "int(void*,double*,double*,int)"
+            },
+            "binary_name": "probe.so",
+            "commands": [
+              [
+                "/usr/local/cuda/bin/nvcc",
+                "-Xcompiler",
+                "-fPIC",
+                "-O3",
+                "-std=c++17",
+                "--fmad=true",
+                "--prec-div=true",
+                "--prec-sqrt=true",
+                "--ftz=false",
+                "-arch=sm_120",
+                "-DCF_PRIVATE=0",
+                "-I",
+                "${MODULE_DIR}",
+                "-shared",
+                "${MODULE_DIR}/probe.cu",
+                "-o",
+                "${MODULE_DIR}/probe.so"
+              ]
+            ],
+            "configuration": {
+              "actual_worlds": 1,
+              "arch": 120,
+              "nbody": 26,
+              "ncam": 7,
+              "nlight": 2,
+              "private_writer": "all input words finite, private copy barrier then committed device generation/valid; enqueue metadata never grants success",
+              "static_and_outputs": "constructor-cloned private immutable static and sole native output writer; no raw GPU buffer API"
+            },
+            "defines": {
+              "CF_PRIVATE": 0
+            },
+            "files": {
+              "cuda/common/vector.cuh": {
+                "bytes": 9802,
+                "sha256": "61c655690e0bb5997994668123f9a95ac9ab02f71d6835c3d4e97ef95df53a22"
+              },
+              "cuda/observations/position_scene.cuh": {
+                "bytes": 4650,
+                "sha256": "420deb0f822987a7810f67f26267e7eb387d2763f23994c7202da843995825f1"
+              },
+              "probe.cu": {
+                "bytes": 8593,
+                "sha256": "397e822d2157aeab01660b0391eba280eacde965d8cfe6d4396585ce79512903"
+              }
+            }
+          },
+          "assets": {
+            "cuda/common/vector.cuh": "cuda/observations/qualified_r02/assets/61c655690e0bb5997994668123f9a95ac9ab02f71d6835c3d4e97ef95df53a22.cuh",
+            "cuda/observations/position_scene.cuh": "cuda/observations/qualified_r02/assets/420deb0f822987a7810f67f26267e7eb387d2763f23994c7202da843995825f1.cuh",
+            "probe.cu": "cuda/observations/qualified_r02/assets/397e822d2157aeab01660b0391eba280eacde965d8cfe6d4396585ce79512903.cu"
+          },
+          "tested_spec_id": "53647b0fe3f9b6ed77cb2992d1fb560256ac33504b3e9a56defef865be7b3ece"
+        },
+        "private": {
+          "description": {
+            "abi": {
+              "capture": "int(void*,int,int)",
+              "create": "int(int,int,int,int*,double*,void**)",
+              "destroy": "int(void*)",
+              "measure": "int(void*,float*)",
+              "read": "int(void*,double*,int*,int*,int64*,int*)",
+              "step": "int(void*,int,int,int)",
+              "upload": "int(void*,double*,double*,int)"
+            },
+            "binary_name": "probe.so",
+            "commands": [
+              [
+                "/usr/local/cuda/bin/nvcc",
+                "-Xcompiler",
+                "-fPIC",
+                "-O3",
+                "-std=c++17",
+                "--fmad=true",
+                "--prec-div=true",
+                "--prec-sqrt=true",
+                "--ftz=false",
+                "-arch=sm_120",
+                "-DCF_PRIVATE=1",
+                "-I",
+                "${MODULE_DIR}",
+                "-shared",
+                "${MODULE_DIR}/probe.cu",
+                "-o",
+                "${MODULE_DIR}/probe.so"
+              ]
+            ],
+            "configuration": {
+              "actual_worlds": 1,
+              "arch": 120,
+              "nbody": 26,
+              "ncam": 7,
+              "nlight": 2,
+              "private_writer": "all input words finite, private copy barrier then committed device generation/valid; enqueue metadata never grants success",
+              "static_and_outputs": "constructor-cloned private immutable static and sole native output writer; no raw GPU buffer API"
+            },
+            "defines": {
+              "CF_PRIVATE": 1
+            },
+            "files": {
+              "cuda/common/vector.cuh": {
+                "bytes": 9802,
+                "sha256": "61c655690e0bb5997994668123f9a95ac9ab02f71d6835c3d4e97ef95df53a22"
+              },
+              "cuda/observations/private_scene_publication.cuh": {
+                "bytes": 1890,
+                "sha256": "50c284b4893986b84223f39bd57443241600764a0ad95029366700c32334d8f0"
+              },
+              "probe.cu": {
+                "bytes": 8604,
+                "sha256": "766ab009399b7c3a2648922435c2509028e24e03d5e77157e0ccfefd2d9ab64c"
+              }
+            }
+          },
+          "assets": {
+            "cuda/common/vector.cuh": "cuda/observations/qualified_r02/assets/61c655690e0bb5997994668123f9a95ac9ab02f71d6835c3d4e97ef95df53a22.cuh",
+            "cuda/observations/private_scene_publication.cuh": "cuda/observations/qualified_r02/assets/50c284b4893986b84223f39bd57443241600764a0ad95029366700c32334d8f0.cuh",
+            "probe.cu": "cuda/observations/qualified_r02/assets/766ab009399b7c3a2648922435c2509028e24e03d5e77157e0ccfefd2d9ab64c.cu"
+          },
+          "tested_spec_id": "99d5b3af5ffb0cb7e2117e8f60f0aa08fbcbbac5f50c3d8e5e7492a4b665da44"
+        }
+      },
+      "evidence": "qa/O03-real-retained-r02/RESULT.json",
+      "build_evidence": "build/O03-real-retained-r02/bundle/modules_manifest.json"
+    },
+    "O04": {
+      "roles": {
+        "existing": {
+          "description": {
+            "abi": {
+              "capture": "int(void*,int,int,double)",
+              "create": "int(void**,int*,double*)",
+              "destroy": "int(void*)",
+              "measure": "int(void*,float*)",
+              "mutate": "int(void*,int*)",
+              "read": "int(void*,double*,int*,uint64*)",
+              "step": "int(void*,int,double)",
+              "upload": "int(void*,double*,double*,int*)"
+            },
+            "binary_name": "probe.so",
+            "commands": [
+              [
+                "/usr/local/cuda/bin/nvcc",
+                "-Xcompiler",
+                "-fPIC",
+                "-O3",
+                "-std=c++17",
+                "--fmad=true",
+                "--prec-div=true",
+                "--prec-sqrt=true",
+                "--ftz=false",
+                "-arch=sm_120",
+                "-DCF_ROUTE=1",
+                "-I",
+                "${MODULE_DIR}",
+                "-shared",
+                "${MODULE_DIR}/probe.cu",
+                "-o",
+                "${MODULE_DIR}/probe.so"
+              ]
+            ],
+            "configuration": {
+              "actual_worlds": 1,
+              "arch": 120,
+              "materialize": 0,
+              "ns": 37,
+              "numerical_change": "none; original per-sensor functions/RAW-WAR-WAW order retained by exact DAG",
+              "private_outputs_and_metadata": true,
+              "raw_stride": 354,
+              "route": "existing",
+              "width": 153
+            },
+            "defines": {
+              "CF_ROUTE": 1
+            },
+            "files": {
+              "cuda/common/vector.cuh": {
+                "bytes": 9802,
+                "sha256": "61c655690e0bb5997994668123f9a95ac9ab02f71d6835c3d4e97ef95df53a22"
+              },
+              "cuda/observations/observations.cuh": {
+                "bytes": 11797,
+                "sha256": "1dcb7b3746e4fa8ef3b769f75893768a1aa81b5a14d2f977c972b12d061a17f2"
+              },
+              "probe.cu": {
+                "bytes": 6347,
+                "sha256": "192d91669e64e07ea5757418e39f0c7924586ac098ab059679a71f0ac3b47955"
+              }
+            }
+          },
+          "assets": {
+            "cuda/common/vector.cuh": "cuda/observations/qualified_r02/assets/61c655690e0bb5997994668123f9a95ac9ab02f71d6835c3d4e97ef95df53a22.cuh",
+            "cuda/observations/observations.cuh": "cuda/observations/qualified_r02/assets/1dcb7b3746e4fa8ef3b769f75893768a1aa81b5a14d2f977c972b12d061a17f2.cuh",
+            "probe.cu": "cuda/observations/qualified_r02/assets/192d91669e64e07ea5757418e39f0c7924586ac098ab059679a71f0ac3b47955.cu"
+          },
+          "tested_spec_id": "c1ea7200196352dafca69438e85c1772f6af253e4c0ea00325e5bbb98103f29c"
+        },
+        "owned": {
+          "description": {
+            "abi": {
+              "capture": "int(void*,int,int,double)",
+              "create": "int(void**,int*,double*)",
+              "destroy": "int(void*)",
+              "measure": "int(void*,float*)",
+              "mutate": "int(void*,int*)",
+              "read": "int(void*,double*,int*,uint64*)",
+              "step": "int(void*,int,double)",
+              "upload": "int(void*,double*,double*,int*)"
+            },
+            "binary_name": "probe.so",
+            "commands": [
+              [
+                "/usr/local/cuda/bin/nvcc",
+                "-Xcompiler",
+                "-fPIC",
+                "-O3",
+                "-std=c++17",
+                "--fmad=true",
+                "--prec-div=true",
+                "--prec-sqrt=true",
+                "--ftz=false",
+                "-arch=sm_120",
+                "-DCF_ROUTE=3",
+                "-I",
+                "${MODULE_DIR}",
+                "-shared",
+                "${MODULE_DIR}/probe.cu",
+                "-o",
+                "${MODULE_DIR}/probe.so"
+              ]
+            ],
+            "configuration": {
+              "actual_worlds": 1,
+              "arch": 120,
+              "materialize": 0,
+              "metadata_guard": "private host and device cold snapshot; edits fail and revoke before CUDA; no hot hash/CPU physics",
+              "ns": 37,
+              "numerical_change": "none; original per-sensor functions/RAW-WAR-WAW order retained by exact DAG",
+              "private_outputs_and_metadata": true,
+              "private_state": "all distinct context allocations; no public structure/output GPU array exported",
+              "raw_stride": 354,
+              "route": "owned-private",
+              "width": 153
+            },
+            "defines": {
+              "CF_ROUTE": 3
+            },
+            "files": {
+              "cuda/common/vector.cuh": {
+                "bytes": 9802,
+                "sha256": "61c655690e0bb5997994668123f9a95ac9ab02f71d6835c3d4e97ef95df53a22"
+              },
+              "cuda/observations/observations.cuh": {
+                "bytes": 17373,
+                "sha256": "1d25715dac1abd4400ff512c5b9029bd83aee7e201cc78ec2d0f308b0f0c97ba"
+              },
+              "probe.cu": {
+                "bytes": 6729,
+                "sha256": "38705af0f9d15d22c03f6bb51c47cfc597cff8c5395086105822a42d758516b1"
+              }
+            }
+          },
+          "assets": {
+            "cuda/common/vector.cuh": "cuda/observations/qualified_r02/assets/61c655690e0bb5997994668123f9a95ac9ab02f71d6835c3d4e97ef95df53a22.cuh",
+            "cuda/observations/observations.cuh": "cuda/observations/qualified_r02/assets/1d25715dac1abd4400ff512c5b9029bd83aee7e201cc78ec2d0f308b0f0c97ba.cuh",
+            "probe.cu": "cuda/observations/qualified_r02/assets/38705af0f9d15d22c03f6bb51c47cfc597cff8c5395086105822a42d758516b1.cu"
+          },
+          "tested_spec_id": "7f0923b4095b1c99cf2bf79d1008e56d669e5d6bc287e9bc545993a72432cccc"
+        }
+      },
+      "evidence": "qa/O04-real-owned-r02/RESULT.json",
+      "build_evidence": "build/O04-real-owned-r02/bundle/modules_manifest.json"
+    }
+  },
+  "sampler": {
+    "ns": 37,
+    "width": 153,
+    "raw_stride": 354,
+    "NSTATE": 854,
+    "NFLAGS": 112,
+    "integer_count": 1177,
+    "integer_sha256": "c7f3c7572b866848a00954629971adaa55cbddb052f596b61728ba366aee6018",
+    "period_sha256": "08d6a91e76c769c8bcf186ce85d9b35830dde80eb95a314b10dd55d82525c525",
+    "timestep": 0.002
+  },
+  "scene": {
+    "worlds": 1,
+    "nbody": 26,
+    "cameras": 7,
+    "lights": 2,
+    "integer_count": 9,
+    "local_count": 96,
+    "integer_sha256": "26fbea4c20d04c4751dacdf5707baed10be5987ac4383dbd9116fb0ed4bd0ac0",
+    "local_sha256": "bb526eff5b061abcec222e140fa4d0122d18ae7a1946e76c7ffd4a66ad494fe6"
+  },
+  "scope": "Source-scoped independent CUDA functions; exact measured sm120/FMA/precise/nonFTZ ABI, no automatic live application or global default adoption"
+}
