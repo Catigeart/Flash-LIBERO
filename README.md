@@ -104,6 +104,72 @@ finally:
 
 Available suite names include `libero_spatial`, `libero_object`, `libero_goal`, `libero_90`, and `libero_10`. LIBERO uses sparse task-completion rewards.
 
+### Native GPU batches
+
+Use `GpuBatchEnv` to advance multiple worlds of **one task and one shared static
+model** in a native GPU batch. This is separate from the compatible
+`DummyVectorEnv` / `SubprocVectorEnv` interfaces.
+
+```python
+import numpy as np
+from libero.libero import benchmark
+from libero.libero.envs import GpuBatchEnv
+
+suite = benchmark.get_benchmark("libero_10")()
+with GpuBatchEnv(
+    suite.get_task_bddl_file_path(0),
+    num_envs=8,
+    init_states=suite.get_task_init_states(0),
+    seed=0,
+    use_camera_obs=False,
+) as env:
+    obs = env.reset()
+    obs, rewards, successes, infos = env.step(np.zeros((8, env.action_dim)))
+    env.reset(id=[0, 3])
+    print(env.diagnostics())
+```
+
+Observations are dictionaries with a leading environment axis. `step` advances
+all worlds; `reset` and `set_init_state` accept selected IDs in caller order.
+There is no automatic reset. `set_init_state` preserves controller history,
+whereas `reset` clears episode/controller/observation state. Fixture poses are
+sampled once at construction and shared; reset selects movable/robot states
+from the supplied bank. If no bank is supplied, the corresponding official
+`.pruned_init` file is loaded. Different fixture layouts or tasks require
+separate batches. Model replacement and interactive rendering are not exposed
+through this entry. Set `use_camera_obs=True` for offscreen images; image rendering
+and task goal evaluation are still performed at the host boundary.
+This entry retains the low-level physics factory's diagnostic construction mode.
+Set `strict_build_receipts=True` to additionally use the product entry's full
+compiler/library dependency receipts and artifact cache; this can add substantial
+cold-build time. Runtime numerical, source-binding, index and owner checks remain
+in force in both modes. This option does not grant numerical qualification.
+
+Device memory is budgeted from the selected GPU's **current free memory** during
+construction, after existing physics allocations. The planner reserves an
+estimate for subsequent solver/controller/observation allocations plus the
+larger of 512 MiB or 10% of the available budget as headroom. An optional `memory_budget`
+dictionary accepts `limit_bytes`, `reserve_bytes`, and `safety_fraction`; the
+limit applies to allocations remaining at the planning boundary. The snapshot
+is available in `env.memory_budget`. These are estimates, so subsequent CUDA
+allocation failures remain possible. Index, model, contact, and kernel resource
+checks remain enforced. Insufficient memory raises an error without changing N
+or truncating contacts.
+
+To time the complete batch interface, excluding setup, reset, and policy inference:
+
+```bash
+python -m benchmark_scripts.benchmark_gpu_batch --suite libero_10 --num-envs 8 --warmup 20 --steps 600 --repeats 3
+# Add --camera for two 128x128 RGB cameras, or --task-ids 0 for one task.
+```
+
+The JSON report includes setup time, repeated milliseconds per batch control
+step, environment steps per second, actual integration counts, and the budget
+snapshot. These measurements include host goal/observation work and are not
+device-only kernel timings. Tasks rejected by the memory preflight are recorded
+with `status="insufficient_memory"`; the runner continues with the other tasks
+at the requested N.
+
 For task generation and benchmark usage, see the [upstream documentation](https://lifelong-robot-learning.github.io/LIBERO/).
 
 ## Datasets

@@ -183,7 +183,7 @@ class NewtonFwdWorkspace:
             np.zeros((NV,), np.int32), np.full((NV,), -1, np.int32),
             np.zeros((NV,), np.int32), np.zeros((2,), np.float64))
         self.s07 = S07DeviceBridge(build_dir=s07_build_dir,
-                                   kernel_source=s07_kernel_source)
+                                   kernel_source=s07_kernel_source, defer_compile=True)
         self._build_s07_args()
         self.s07_stream_ptr = int(self.stream.cuda_stream)
         self.reset_run_state()

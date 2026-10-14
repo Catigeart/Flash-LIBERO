@@ -5,3 +5,4 @@ from .robots import *
 from .arenas import *
 from .env_wrapper import OffScreenRenderEnv, SegmentationRenderEnv
 from .venv import SubprocVectorEnv, DummyVectorEnv
+from libero.gpu.host.adapters.environment.batch_env import GpuBatchEnv

@@ -116,10 +116,9 @@ class CurrentWrittenRecoveringRuntime(ShapeCountedResidentStepRuntime):
         self._recovery_tokens=tuple(_token(a) for a in self._recovery_roots)
         # No capture_if call is allowed outside CUDA capture: Warp otherwise
         # reads the condition on the host. This graph always branches on device.
-        with wp.ScopedCapture(stream=self.stream,force_module_load=True) as capture:
-            wp.capture_if(self.reset_predicate,on_true=self._reset_forward,
-                          stream=self.stream)
-        self._reset_forward_graph=capture.graph
+        # Native component assembly installs its final solver before capture.
+        # Standalone callers capture lazily at their first actual step.
+        self._reset_forward_graph=None
 
     def _reset_forward(self):
         # The physical forward consumes reset ctrl=0. No robot/controller hook.
@@ -169,6 +168,10 @@ class CurrentWrittenRecoveringRuntime(ShapeCountedResidentStepRuntime):
             wp.capture_if(self.reset_predicate,on_true=self._reset_forward,
                           stream=self.stream)
         else:
+            if self._reset_forward_graph is None:
+                with wp.ScopedCapture(stream=self.stream,force_module_load=True) as capture:
+                    wp.capture_if(self.reset_predicate,on_true=self._reset_forward,stream=self.stream)
+                self._reset_forward_graph=capture.graph
             wp.capture_launch(self._reset_forward_graph,stream=self.stream)
 
     def _admit_current_acceleration(self):

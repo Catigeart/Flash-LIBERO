@@ -7,10 +7,9 @@ this adapter and any downstream captured graph.
 """
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from numbers import Integral
 
-_CHAIN_MAX_BYTES = 6 * 1024**3
 # Actual qualified fixed-model chain settings. Dimensions/route qualification
 # still belongs to the caller; these numbers alone are not a support proof.
 FIXED_ACCEPTED_CAPACITIES = {
@@ -43,6 +42,7 @@ class CollisionCapacityPlan:
     max_device_bytes: int
     reserved_other_bytes: int
     total_device_budget_bytes: int
+    memory_budget: dict | None = field(default=None, compare=False)
 
     def workspace_kwargs(self):
         return {name: getattr(self, name) for name in (
@@ -56,25 +56,39 @@ class CollisionCapacityPlan:
             overflow_policy='device error, no contact or request truncation')
 
 
-def plan_capacity(static, nworld, *, total_device_budget_bytes,
-                  reserved_other_bytes, slots=None, call_capacity=None,
+def plan_capacity(static, nworld, *, total_device_budget_bytes=None,
+                  reserved_other_bytes=None, slots=None, call_capacity=None,
                   pair_capacity=None, stage_slots=None, req_slots=None,
-                  contact_capacity=None):
+                  contact_capacity=None, device='cuda:0', memory_budget=None,
+                  pending_bytes=0):
     """Budget C before allocation alongside D/S/N/Euler/render/context.
 
-    The reservation is caller supplied; this function must not guess that all
-    remaining VRAM belongs to C. Capacity reductions are explicit, never based
-    on an observed contact maximum masquerading as a guaranteed upper bound.
+    A caller may supply an explicit total/reservation, or use a current-device
+    snapshot with pending allocations and headroom reserved. Capacity reductions
+    are explicit, never based on an observed contact maximum masquerading as a
+    guaranteed upper bound.
     """
     nworld = _integer('nworld', nworld, maximum=128)
     nbody, ngeom = len(static['body_geomnum']), len(static['geom_size'])
     _integer('nbody', nbody)
     _integer('ngeom', ngeom)
+    snapshot = None
+    if total_device_budget_bytes is None:
+        if reserved_other_bytes is not None:
+            raise ValueError('explicit reserve requires an explicit total budget')
+        from libero.gpu.host.runtime.core.memory_budget import resolve_memory_budget
+        snapshot = resolve_memory_budget(memory_budget, device=device, pending_bytes=pending_bytes)
+        total_device_budget_bytes = snapshot['available_bytes']
+        reserved_other_bytes = snapshot['reserved_bytes']
+    elif memory_budget is not None or pending_bytes:
+        raise ValueError('explicit and adaptive memory budgets cannot be combined')
+    if reserved_other_bytes is None:
+        reserved_other_bytes = 0
     total = _integer('total_device_budget_bytes', total_device_budget_bytes,
                      maximum=2**63 - 1)
     reserve = _integer('reserved_other_bytes', reserved_other_bytes,
                        minimum=0, maximum=2**63 - 1)
-    budget = min(_CHAIN_MAX_BYTES, total - reserve)
+    budget = total - reserve
     if budget <= 0:
         raise ValueError('no collision budget remains after other reservations')
     slots = _integer('slots', ngeom * 4 + 16 if slots is None else slots)
@@ -95,14 +109,16 @@ def plan_capacity(static, nworld, *, total_device_budget_bytes,
         contacts * 4096 + requests * 2048 + stages * 512 +
         nbody * 512 + ngeom * 1024)
     if estimated > budget:
-        raise ValueError('collision preflight exceeds reserved device budget')
+        raise MemoryError(f'collision preflight requires {estimated} bytes for nworld={nworld}; '
+                          f'budget={budget}, available={total}, reserved={reserve}')
     return CollisionCapacityPlan(nworld, nbody, ngeom, slots, calls, pairs,
-        stages, requests, contacts, estimated, budget, reserve, total)
+        stages, requests, contacts, estimated, budget, reserve, total, snapshot)
 
 
 
-def plan_model_capacity(static, nworld, *, total_device_budget_bytes,
-                        reserved_other_bytes):
+def plan_model_capacity(static, nworld, *, total_device_budget_bytes=None,
+                        reserved_other_bytes=None, device='cuda:0', memory_budget=None,
+                        metadata=None):
     """Source-filter candidate capacities for new models, not old grants.
 
     Requests cover every unordered geom pair plus explicit records. Calls cover
@@ -121,9 +137,16 @@ def plan_model_capacity(static, nworld, *, total_device_budget_bytes,
     requests = max(1, ngeom * (ngeom - 1) // 2 + npair + 16)
     calls = max(1, potential + 16)
     stages = max(1, nbody * (nbody - 1) // 2 + npair + 8)
+    pending = 0
+    if metadata is not None and total_device_budget_bytes is None:
+        from libero.gpu.host.runtime.core.memory_budget import estimate_pending_bytes
+        d = metadata['dimensions']
+        pending = estimate_pending_bytes(metadata, nworld,
+            rows=6*max(1,nconmax)+int(d['nv'])+int(d['njnt']), contacts=max(1,nconmax))
     return plan_capacity(static, nworld,
         total_device_budget_bytes=total_device_budget_bytes,
         reserved_other_bytes=reserved_other_bytes,
+        device=device, memory_budget=memory_budget, pending_bytes=pending,
         slots=requests, req_slots=requests, call_capacity=calls,
         pair_capacity=stages, stage_slots=stages,
         contact_capacity=max(1, nconmax))
@@ -238,8 +261,5 @@ class CollisionRuntimeAdapter:
                 'contact_i': self.contact_i, 'effective_active': self.effective_active,
                 'first_error': self.first_error, 'fields': self.contacts.fields,
                 'field_owner': self.contacts, 'status': self.workspace.finalize.status}
-
-
-
 
 

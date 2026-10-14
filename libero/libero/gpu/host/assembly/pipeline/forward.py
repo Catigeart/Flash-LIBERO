@@ -191,6 +191,14 @@ def _shape_enqueue(step1=False):
 
 
 class FusedShapePhysicsForward(BackupForward):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # The native schedule recorder must see the actual entry owners before
+        # any forward has run. Previously eager graph capture supplied these
+        # bindings as a side effect of calling enqueue during construction.
+        self.n._r03_upstream = self.n_upstream
+        self.n._r03_enabled = self.mask
+
     _fusion_project_newton = _project
     enqueue = _shape_enqueue()
     enqueue_step1 = _shape_enqueue(True)

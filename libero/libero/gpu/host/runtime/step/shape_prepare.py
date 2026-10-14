@@ -17,12 +17,12 @@ from .generic_prepare import _cold_factories
 
 def prepare_shape_physics(built, *, state, device='cuda:0', stream=None,
                             mode='diagnostic', with_controller=True, tape_steps=0,
-                            model_spec=None, constraint_package=None, nworld=1):
+                            model_spec=None, constraint_package=None, nworld=1, memory_budget=None):
     stream = wp.get_stream(device) if stream is None else stream
     try:
         return _prepare_shape_physics(built,state=state,device=device,stream=stream,
             mode=mode,with_controller=with_controller,tape_steps=tape_steps,
-            model_spec=model_spec,constraint_package=constraint_package,nworld=nworld)
+            model_spec=model_spec,constraint_package=constraint_package,nworld=nworld,memory_budget=memory_budget)
     except BaseException as error:
         # Synchronize pending allocations/copies before dropping failed local
         # arenas. The original exception/trace remains available to the runner.
@@ -38,7 +38,7 @@ def prepare_shape_physics(built, *, state, device='cuda:0', stream=None,
 
 def _prepare_shape_physics(built, *, state, device='cuda:0', stream=None,
                              mode='diagnostic', with_controller=True, tape_steps=0,
-                             model_spec=None, constraint_package=None, nworld=1):
+                             model_spec=None, constraint_package=None, nworld=1, memory_budget=None):
     if mode != 'diagnostic':
         raise ValueError('raw-model full-chain production acceptance is pending')
     model = built.native_model
@@ -104,8 +104,8 @@ def _prepare_shape_physics(built, *, state, device='cuda:0', stream=None,
         owner = SimpleNamespace(xpos=pos.frames.geom_xpos,xmat=pos.frames.geom_xmat,
                                 xipos=pos.mass.xipos,ximat=pos.mass.ximat,active=cactive)
         cstatic = static_from_model(model)
-        cplan = plan_model_capacity(cstatic,W,total_device_budget_bytes=7168*1024**2,
-                                   reserved_other_bytes=3072*1024**2)
+        cplan = plan_model_capacity(cstatic,W,device=device,memory_budget=memory_budget,
+                                   metadata=built.metadata)
         C = cplan.contact_capacity
         R = C*6 + int(model.nv) + int(model.njnt)
         from libero.gpu.host.bindings.model_capacity import plan_native_model
@@ -212,7 +212,8 @@ def _prepare_shape_physics(built, *, state, device='cuda:0', stream=None,
         expected_state=expected_state,initial_state=state,post=post,controller=controller,stream=stream,
         model_pack=SimpleNamespace(model=model,mjb_path=actual_model),model_spec=spec,intake=intake,
         integration_tape=None,position_tape=None,reset_ctrl=ctrl,mode=mode,
-        cold_copy_choice=copy_choice,runtime_shape=runtime_shape)
+        cold_copy_choice=copy_choice,runtime_shape=runtime_shape,
+        memory_budget=cplan.memory_budget,collision_capacity_plan=cplan)
     def close():
         if getattr(bundle,"closed",False):return
         wp.synchronize_stream(stream)

@@ -29,6 +29,7 @@ packages |= packages_below("libero/lifelong", "libero.lifelong")
 packages |= packages_below("libero/configs", "libero.configs")
 packages |= packages_below("libero/libero/gpu", "libero.gpu")
 packages |= packages_below("scripts", "scripts")
+packages |= packages_below("benchmark_scripts", "benchmark_scripts")
 packages |= packages_below("templates", "templates")
 
 

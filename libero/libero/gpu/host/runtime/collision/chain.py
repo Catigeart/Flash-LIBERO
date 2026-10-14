@@ -1087,7 +1087,7 @@ class CollisionChainWorkspace:
                  slots: int | None = None, call_capacity: int | None = None,
                  pair_capacity: int | None = None, stage_slots: int | None = None,
                  req_slots: int | None = None, contact_capacity: int | None = None,
-                 max_device_bytes: int = 6 * 1024**3,
+                 max_device_bytes: int | None = None,
                  borrow_detector_raw: bool = False, detector_backend: str = 'legacy'):
         from libero.gpu.reference.collision.collision_dispatch.kernel import CollisionDispatchWorkspace
         from libero.gpu.reference.collision.collision_tree.kernel import CollisionTreeWorkspace
@@ -1154,7 +1154,10 @@ class CollisionChainWorkspace:
             self.call_capacity * 50 * 2048 + self.slots * 512 +
             self.contact_capacity * 4096 + self.req_slots * 2048 +
             self.stage_slots * 512 + self.nbody * 512 + self.ngeom * 1024)
-        if not 0 < max_device_bytes <= 6 * 1024**3 or self.preflight_device_bytes > max_device_bytes:
+        if max_device_bytes is None:
+            from libero.gpu.host.runtime.core.memory_budget import resolve_memory_budget
+            max_device_bytes = resolve_memory_budget(device=device)['collision_budget_bytes']
+        if type(max_device_bytes) is not int or max_device_bytes <= 0 or self.preflight_device_bytes > max_device_bytes:
             raise ValueError('private device byte budget exceeded before allocation')
 
         # ---- device statics

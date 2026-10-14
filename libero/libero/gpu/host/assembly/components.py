@@ -11,6 +11,14 @@ COMPONENTS=('position','dynamics','osc','collision','collision_detect',
             'constraints','post','euler','recovery','copies','forward','capacity')
 
 
+def _capture_reset_forward(loop):
+    """Record a complete, explicitly begun forward using installed components."""
+    with wp.ScopedCapture(stream=loop.stream,force_module_load=True) as capture:
+        wp.capture_if(getattr(loop,'reset_predicate',loop.recovery.reset_mask),
+                      on_true=loop._reset_forward,stream=loop.stream)
+    loop._reset_forward_graph=capture.graph
+
+
 def _plans(bundle):
     """Collect installed NativePlans without traversing model/library objects."""
     from libero.gpu.host.build.native import NativePlan
@@ -148,12 +156,14 @@ def prepare_cuda_physics(*args,cuda_build_root=None,mathdx_root=None,
             for name,_,_,_ in foundation._backend_methods)
         foundation.validate_bindings()
         if optimized_dataflow and 'forward' in selected:
+            # Prefix-only cache graphs require their caller's explicit begin.
+            # Record the complete native forward first, after native Newton is
+            # installed, rather than relying on a legacy solver capture.
+            _capture_reset_forward(loop)
             from libero.gpu.host.bindings.reuse import install_dataflow
             manifests['reuse']=install_dataflow(bundle,root/'reuse',diagnostic_profile=dataflow_profile)
         foundation.validate_bindings()
-        with wp.ScopedCapture(stream=loop.stream,force_module_load=True) as capture:
-            wp.capture_if(getattr(loop,'reset_predicate',loop.recovery.reset_mask),on_true=loop._reset_forward,stream=loop.stream)
-        loop._reset_forward_graph=capture.graph
+        _capture_reset_forward(loop)
         bundle.fusion_batch='cuda-r02' if optimized_dataflow else 'cuda-r01'
         bundle.cuda_selection_manifest=manifests
         bundle.cuda_algorithm_manifest=dict(configuration=policy,

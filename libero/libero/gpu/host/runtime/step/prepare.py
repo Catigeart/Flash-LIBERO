@@ -8,7 +8,7 @@ import warp as wp
 
 
 def prepare_fixed_physics(pack, *, state, device='cuda:0', stream=None, with_controller=False,
-                          tape_steps=0):
+                          tape_steps=0, memory_budget=None):
     """Prepare one physical world for the first real state-feedback test.
 
     ``state`` is an explicit reset-boundary packet, not CPU forward truth.
@@ -67,8 +67,8 @@ def prepare_fixed_physics(pack, *, state, device='cuda:0', stream=None, with_con
         owner = SimpleNamespace(xpos=pos.frames.geom_xpos,xmat=pos.frames.geom_xmat,
                                 xipos=pos.mass.xipos,ximat=pos.mass.ximat,active=cactive)
         cstatic = static_from_model(model)
-        cplan = plan_capacity(cstatic,W,total_device_budget_bytes=7168*1024**2,
-                              reserved_other_bytes=2048*1024**2,**FIXED_ACCEPTED_CAPACITIES)
+        cplan = plan_capacity(cstatic,W,device=device,memory_budget=memory_budget,
+                              pending_bytes=2048*1024**2,**FIXED_ACCEPTED_CAPACITIES)
         c = CollisionRuntimeAdapter(cstatic,cplan,source_owner=owner,
             source_paths={k:k for k in ('xpos','xmat','xipos','ximat','active')},stream=stream,device=device)
         transport = ContactTransport(c,d,nworld=W,capacity=C,stream=stream)

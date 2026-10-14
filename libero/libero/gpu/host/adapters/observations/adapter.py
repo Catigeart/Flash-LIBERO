@@ -153,6 +153,38 @@ class GpuObservationAdapter:
             images=self.scene_cache.render_at_boundary(self.bridges,world,image_convention,option)
         return self.lowdim.pack(world,images)
 
+    def observations_many(self, worlds=None, image_convention="opengl"):
+        """Download each shared buffer once, then package selected worlds."""
+        if self.closed or not self.valid:
+            raise RuntimeError('observation adapter is closed or quarantined')
+        worlds = tuple(range(self.nworld)) if worlds is None else tuple(worlds)
+        if any(not 0 <= w < self.nworld for w in worlds):
+            raise IndexError('observation world outside batch')
+        if self.host_observables:
+            return [self.observations(w, image_convention) for w in worlds]
+        if self.lowdim.last_stream is not None:
+            wp.synchronize_stream(self.lowdim.last_stream)
+        values = self.lowdim.observed.numpy().reshape(self.nworld, -1)
+        scene = self.scene_cache
+        snapshot = None
+        if scene is not None:
+            if scene.last_stream is not None:
+                wp.synchronize_stream(scene.last_stream)
+            snapshot = (scene.generation.numpy().reshape(self.nworld, scene.ncamera),
+                        scene.scenes.numpy().reshape(self.nworld, scene.ncamera, scene.stride),
+                        scene.parent_generation.numpy().reshape(self.nworld, scene.ncamera))
+            for spec in self.plan.image_specs:
+                h, w, _ = spec['shape']
+                if (h, w) not in self.bridges:
+                    self.bridges[h, w] = DerivedRenderBridge(self.model, width=w, height=h)
+        option = self._public_bridge.vopt if self._public_bridge is not None else self.scene_option
+        result = []
+        for world in worlds:
+            images = {} if scene is None else scene.render_at_boundary(
+                self.bridges, world, image_convention, option, snapshot=snapshot)
+            result.append(self.lowdim.pack(world, images, values=values[world]))
+        return result
+
     def render_gpu(self,raw_fields,width=640,height=480,camera_name=None,depth=False,segmentation=False,world=0,stream=None,mode="offscreen",device_id=-1):
         """Render current device publications at an explicit public boundary.
 

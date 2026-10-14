@@ -5,6 +5,7 @@ Different static models must be grouped into separate batches; matching NV alone
 is insufficient. This is a physics driver, not a production task-factory grant.
 """
 from dataclasses import dataclass
+from contextlib import nullcontext
 import hashlib
 import json
 import numpy as np
@@ -84,12 +85,35 @@ class NativeBatchedPhysics:
         self.bundle.close()
 
 
-def prepare_native_batch(built, *, states, **kwargs):
+def prepare_native_batch(built, *, states, strict_build_receipts=False, **kwargs):
     from libero.gpu.host.factory import prepare_cuda_physics
+    from libero.gpu.host.runtime.step.recovery_final_event_environment_factory import (
+        actual_decoder_record, _native_intake_package)
+    from libero.gpu.host.runtime.core.product_paths import (
+        product_build, mathdx_root, toolchain_scope, cache_root)
+    from libero.gpu.host.build.native import strict_build_receipts_scope
+    from libero.gpu.host.build.product_cache import product_cache_scope
     states = tuple(states)
+    if type(strict_build_receipts) is not bool:
+        raise ValueError('strict_build_receipts must be bool')
     state = stack_reset_states(states)
     W = len(states)
     if "nworld" in kwargs or "state" in kwargs:
         raise ValueError("batch states determine nworld and state")
-    bundle = prepare_cuda_physics(built, state=state, nworld=W, **kwargs)
-    return NativeBatchedPhysics(bundle)
+    built.metadata['decoder_record'] = actual_decoder_record(built)
+    if ('model_spec' in kwargs) != ('constraint_package' in kwargs):
+        raise ValueError('model_spec and constraint_package must be supplied together')
+    if 'model_spec' not in kwargs:
+        kwargs['model_spec'], kwargs['constraint_package'] = _native_intake_package(built)
+    with product_build() as root:
+        sdk = kwargs.pop('mathdx_root', None)
+        sdk = mathdx_root() if sdk is None else sdk
+        kwargs.setdefault('cuda_build_root', root / 'cuda')
+        cache = product_cache_scope(cache_root() / 'products') if strict_build_receipts else nullcontext()
+        with toolchain_scope(sdk), strict_build_receipts_scope(strict_build_receipts), cache:
+            bundle = prepare_cuda_physics(built, state=state, nworld=W, mathdx_root=sdk, **kwargs)
+    try:
+        return NativeBatchedPhysics(bundle)
+    except BaseException:
+        bundle.close()
+        raise

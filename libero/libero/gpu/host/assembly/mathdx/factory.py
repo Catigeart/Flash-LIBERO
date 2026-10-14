@@ -20,9 +20,10 @@ def prepare_fused_physics(*args,cuda_build_root=None,mathdx_root=None,diagnostic
                 diagnostic_profile=diagnostic_profile,execution_config=newton_execution_config,
                 **algorithm_options).install()
         loop=bundle.runtime
-        with wp.ScopedCapture(stream=loop.stream,force_module_load=True) as capture:
-            wp.capture_if(getattr(loop,'reset_predicate',loop.recovery.reset_mask),on_true=loop._reset_forward,stream=loop.stream)
-        loop._reset_forward_graph=capture.graph
+        if not defer_cuda_core:
+            with wp.ScopedCapture(stream=loop.stream,force_module_load=True) as capture:
+                wp.capture_if(getattr(loop,'reset_predicate',loop.recovery.reset_mask),on_true=loop._reset_forward,stream=loop.stream)
+            loop._reset_forward_graph=capture.graph
         if core is not None:
             bundle.persistent_cuda_core=core;bundle.cuda_newton_manifest=core.manifest
         root=(GPU_ROOT / 'host/runtime/newton')

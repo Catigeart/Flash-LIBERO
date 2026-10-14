@@ -132,7 +132,8 @@ class S07DeviceBridge:
                  nvrtc_path: str | None = None,
                  build_dir: Path | None = None,
                  arch: str = ARCH,
-                 force_rebuild: bool = False):
+                 force_rebuild: bool = False,
+                 defer_compile: bool = False):
         self.kernel_source = Path(kernel_source) if kernel_source else default_kernel_path()
         self.nvrtc_path = str(nvrtc_path) if nvrtc_path else default_nvrtc()
         self.arch = arch
@@ -155,7 +156,11 @@ class S07DeviceBridge:
         self.compile_record = {}
         self.ptx_sha256 = None
         self.ptx_bytes = None
-        self._ptx = self._compile(prefix, force_rebuild)
+        self._force_rebuild = force_rebuild
+        # Native persistent Newton consumes the frozen source directly. Its
+        # workspace still needs S07Args, but never loads this standalone module.
+        # Any actual legacy load retains the original full PTX/source gates.
+        self._ptx = None if defer_compile else self._compile(prefix, force_rebuild)
         self._module = None
         self._function = None
         self._cuda = None
@@ -383,6 +388,9 @@ class S07DeviceBridge:
     def load(self):
         if self._module is not None:
             return
+        if self._ptx is None:
+            _, prefix, _ = device_prefix(self.kernel_source)
+            self._ptx = self._compile(prefix, self._force_rebuild)
         cuda = self._driver()
         ctx = ct.c_void_p()
         rc = cuda.cuCtxGetCurrent(ct.byref(ctx))

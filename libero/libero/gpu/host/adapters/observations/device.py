@@ -215,10 +215,11 @@ class DeviceObservations:
             raise ValueError("unknown observation packing profile")
         self.packing_profile = profile
 
-    def pack(self, world=0, images=None):
+    def pack(self, world=0, images=None, *, values=None):
         if not 0 <= world < self.nworld: raise IndexError(world)
-        if self.last_stream is not None:wp.synchronize_stream(self.last_stream)
-        values = self.observed.numpy().reshape(self.nworld,-1)[world]
+        if values is None:
+            if self.last_stream is not None:wp.synchronize_stream(self.last_stream)
+            values = self.observed.numpy().reshape(self.nworld,-1)[world]
         if self.packing_profile == "recipe":
             if self._packing_recipe is None or not self._packing_recipe.matches(self.plan):
                 self._packing_recipe = PackingRecipe.try_create(self.plan)
@@ -299,16 +300,19 @@ class DeviceSampledScenes:
                   self.periods,self.enabled,self.elapsed,self.sampled,self.generation,self.parents,self.parent_generation,self.captured,
                   self.mask if world_mask is None else world_mask,wp.float64(timestep),int(force)],device=self.device,stream=stream)
 
-    def render_at_boundary(self,bridge,world=0,image_convention="opengl",scene_option=None):
+    def render_at_boundary(self,bridge,world=0,image_convention="opengl",scene_option=None, *, snapshot=None):
         from .sampled_images import render_sampled_images
         if not 0<=world<self.nworld:raise IndexError(world)
-        if self.last_stream is not None:wp.synchronize_stream(self.last_stream)
-        generations=self.generation.numpy().reshape(self.nworld,self.ncamera)[world]
-        scenes=self.scenes.numpy().reshape(self.nworld,self.ncamera,self.stride)[world]
+        if snapshot is None:
+            if self.last_stream is not None:wp.synchronize_stream(self.last_stream)
+            snapshot=(self.generation.numpy().reshape(self.nworld,self.ncamera),
+                      self.scenes.numpy().reshape(self.nworld,self.ncamera,self.stride),
+                      self.parent_generation.numpy().reshape(self.nworld,self.ncamera))
+        generations,scenes,parents=(value[world] for value in snapshot)
         render_sampled_images(self.specs,self.descriptors,self.segmentation_mappings,self.layout,
                              scenes,generations,self.rendered_generation[world],self.images[world],
                              bridge,image_convention,scene_option,
-                             self.parent_generation.numpy().reshape(self.nworld,self.ncamera)[world])
+                             parents)
         return {s["name"]:self.images[world][i] for i,s in enumerate(self.specs)}
 
     def reset(self,world_mask=None,stream=None):

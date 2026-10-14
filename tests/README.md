@@ -9,6 +9,9 @@ This source checkout includes a small regression suite for installation and publ
 | `test_product_tool_paths.py` | Compiler and SDK path selection, private child configuration, and build-directory handling. |
 | `test_native_capsule_sources.py` | Native source/header dependency closure, source generation, drift, and path confinement. |
 | `test_gpu_vector_protocol.py` | Vector protocol, cleanup, shared buffers, grouped workers, and per-world RNG using fake environments. |
+| `test_gpu_memory_budget.py` | Adaptive free-memory snapshots, explicit limits, pressure failures, budgets above 6 GiB, and int32 bounds. |
+| `test_gpu_batch_env.py` | Single batch dispatch, ordered outputs, failure quarantine, and selected-world reset using injected physics. |
+| `test_deferred_native_build.py` | Deferred reference compilation, preserved source/PTX rejection, and lazy reset graph capture. |
 | `gpu_product_compatibility/test_camera_contract.py` | Camera keys, shapes, segmentation mapping, and observation clocks using an injected bridge. |
 | `gpu_product_compatibility/test_observable_extensions.py` | Original Observable callbacks, filters, clocks, and owner transfer using a fake facade. |
 | `gpu_product_compatibility/test_render_model_owner.py` | Isolation of graphics model storage using an injected renderer. |
