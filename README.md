@@ -8,6 +8,8 @@
 
 </div>
 
+**WARNING: "Flash-LIBERO is slow now, the project is still developing. "**
+
 **Flash-LIBERO** adds GPU physics to [LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO), a benchmark for knowledge transfer in multitask and lifelong robot learning. Install this distribution and keep your existing LIBERO environment code: simulation uses the GPU by default.
 
 - Original LIBERO imports, task definitions, environment interfaces, and benchmark suites.
